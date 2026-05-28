@@ -8,6 +8,7 @@ lemma injective_of_strictly_increasing (f : ℝ → ℝ) (h : ∀ x y, x < y →
     intro x y h_eq
     -- Proof by contradiction because it is easier
     by_contra! h_neq
+    -- unpack cases from not equal
     have two_cases : x < y ∨ y < x := lt_or_gt_of_ne h_neq
     cases two_cases with
     -- x < y
@@ -33,6 +34,7 @@ lemma continuous_at_two_x (x₀ : ℝ) :
     rw [← mul_sub 2 x x₀]
     rw [abs_mul]
     norm_num
+    -- IDK why linarith doesn't work
     grind_linarith
 
 -- Use non mathlib construction of a limit for practice.
@@ -40,6 +42,17 @@ def SeqLimit (a : ℕ → ℝ) (L : ℝ) : Prop :=
   ∀ ε > 0, ∃ N : ℕ, ∀ n ≥ N, |a n - L| < ε
 
 -- Lemma 3: lim sₙ = L => lim sₙ + c = L + c
-lemma seqLimit_add_const (a : ℕ → ℝ) (L c : ℝ) (h : SeqLimit a L) :
-    SeqLimit (fun n => a n + c) (L + c) := by
-  sorry
+-- Proof: |sₙ + c - (L + c)| = |sₙ + c - L - c| = |sₙ - L| < ε
+lemma seqLimit_add_const (a : ℕ → ℝ) (L c : ℝ) :
+    (SeqLimit a L) → (SeqLimit (fun n => a n + c) (L + c)) := by
+    intro a_converges ε hε
+    have h_exists := a_converges ε hε
+    rcases h_exists with ⟨N, h_bound⟩
+    -- we want to use N from a_converges
+    use N
+    intro n hn
+    -- ring solves most of the above, most of the proof is
+    -- unpacking predicates in order to apply ring_nf
+    ring_nf
+    exact h_bound n hn
+
